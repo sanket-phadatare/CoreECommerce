@@ -1,0 +1,84 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+<style>
+    .product-device {
+        position: absolute;
+        right: 10%;
+        bottom: -30%;
+        width: 300px;
+        height: 540px;
+        background-color: #333;
+        border-radius: 21px;
+        transform: rotate(30deg);
+    }
+
+        .product-device::before {
+            position: absolute;
+            top: 10%;
+            right: 10px;
+            bottom: 10%;
+            left: 10px;
+            content: "";
+            background-color: rgba(255, 255, 255, .1);
+            border-radius: 5px;
+        }
+
+    .product-device-2 {
+        top: -25%;
+        right: auto;
+        bottom: 0;
+        left: 5%;
+        background-color: #e5e5e5;
+    }
+
+    .bi {
+        vertical-align: -.125em;
+        fill: currentColor
+    }
+
+    
+
+    .icon-link > .bi {
+        width: .75em;
+        height: .75em;
+    }
+
+</style>
+
+<svg xmlns="http://www.w3.org/2000/svg" class="d-none">
+    <symbol id="chevron-right" viewBox="0 0 16 16">
+        <path fill-rule="evenodd"
+              d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z">
+        </path>
+    </symbol>
+ </svg>
+
+ 
+<div class="position-relative overflow-hidden p-3 p-md-5 m-md-3 text-center bg-body-tertiary">
+    <div class="col-md-6 p-lg-5 mx-auto my-5">
+        <h1 class="display-3 fw-bold">Designed for Shoppers</h1>
+        <h3 class="fw-normal text-muted mb-3">Shop anything you want with Square Vision</h3>
+        <div class="d-flex gap-3 justify-content-center lead fw-normal">
+            @* <a class="icon-link" href="#">
+                Learn more
+                <svg class="bi" aria-hidden="true">
+                    <use xlink:href="#chevron-right"></use>
+                </svg>
+            </a>  *@
+            <a class="icon-link" asp-controller="Product" asp-action="ProductListing">
+                Buy
+                <svg class="bi" aria-hidden="true">
+                    <use xlink:href="#chevron-right"></use>
+                </svg>
+            </a>
+        </div>
+    </div>
+    <div class="product-device shadow-sm d-none d-md-block"></div>
+    <div class="product-device product-device-2 shadow-sm d-none d-md-block"></div>
+</div>
+
+
+@* <partial name="_ProductHome" /> *@
+    @await Component.InvokeAsync("CategoryProductHome")
+

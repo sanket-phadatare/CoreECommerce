@@ -1,0 +1,212 @@
+﻿@model IEnumerable<TaskCoreCategoryProductsListPage.Models.Product>
+
+@{
+    ViewData["Title"] = "ProductListing";
+}
+
+<style>
+    .counter {
+        display: inline-flex;
+        align-items: center;
+        border: 2px solid #8b4513; /* brown border */
+        border-radius: 8px;
+        padding: 0.1rem 0.1rem;
+        font-family: Arial, sans-serif;
+    }
+
+        .counter button {
+            border: none;
+            background: none;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #8b4513;
+            width: auto;
+            height: 2rem;
+            cursor: pointer;
+        }
+
+        .counter span {
+            margin: 0 1rem;
+            font-size: 1.5rem;
+            font-weight: 500;
+            color: #8b4513;
+            min-width: 1.3rem;
+            text-align: center;
+        }
+
+        .counter button:active {
+            transform: scale(0.8);
+        }
+</style>
+
+<h1>ProductListing</h1>
+<div>
+    <span class="text-dark">Filters:</span> 
+    <div class="dropdown"><span>By Category:</span>
+        <button class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            @if (String.IsNullOrWhiteSpace(ViewBag.CategoryName))
+            {
+                <span>All</span>
+            }
+            else
+            {
+                <span>@ViewBag.CategoryName</span>
+            }
+            </button>
+        <ul class="dropdown-menu" id="categoryList1">
+           
+        </ul>
+    </div>
+</div>
+<div class="row">
+    @foreach(var item in Model)
+    {
+    <div class="col-sm-4 mt-2 mb-3 mb-sm-0">
+            <div class="card">
+                <div class="card-body" id="productCard-@item.ProductId">
+                    <h5 class="card-title">@item.Name</h5>
+                    <p class="card-text">@item.Description</p>
+                    <p class="card-text">Rs. @item.Price</p>
+                    @if(item.StockQuantity > 0)
+                    {
+                        // Fix for CS1977: Cast ViewBag.CartItems to IEnumerable<CartItem> before using LINQ
+                        var cartItems = ViewBag.CartItems as IEnumerable<CartItem>;
+                        if(!User.Identity.IsAuthenticated)
+                        {
+                            <a href="#" class="btn btn-warning" id="product-@item.ProductId" onclick="handleProductQuantity(event, @item.ProductId)">Add</a>
+                        }
+                        else
+                        {
+                            CartItem ci = cartItems.FirstOrDefault(c => c.ProductId == item.ProductId);
+                            if(ci?.ProductId != item.ProductId)
+                            {
+                                <a href="#" class="btn btn-warning" id="product-@item.ProductId" onclick="handleProductQuantity(event, @item.ProductId, @item.StockQuantity)">Add</a>
+                            }
+                            else
+                            {
+                                <div class="counter" id="counter-@item.ProductId">
+                                    <button id="decrement" onclick="handleDecrement(@item.ProductId, @item.StockQuantity)">−</button>
+                                    <span id="count-@item.ProductId">@ci.Quantity</span>
+                                    @if (ci.Quantity == item.StockQuantity)
+                                    {
+                                        <button disabled id="increment-@item.ProductId" onclick="handleIncrement(@item.ProductId, @item.StockQuantity)">+</button>
+                                    }
+                                    else
+                                    {
+                                        <button id="increment-@item.ProductId" onclick="handleIncrement(@item.ProductId, @item.StockQuantity)">+</button>
+
+                                    }
+                                </div>
+                            }
+                        }
+
+                        
+                    }
+                    else
+                    {
+                        <a href="/category" class="btn btn-danger disabled" tabindex="-1" role="button" aria-disabled="true">Out of Stock</a>
+
+                    }
+                </div>
+            </div>
+    </div>
+    }
+    </div>
+
+<script src="~/js/cartbadgecount.js"></script>
+<script>
+
+    $(function(){
+        $.ajax({
+            url : "/category/getall",
+            type : 'GET',
+            content : 'application/json',
+
+            success : function (response){
+                console.log(response);
+                $('#categoryList1').append(`<li><a class="dropdown-item" href="/product/productlisting/">All</a></li>`);
+                for(var item of response){
+                    $('#categoryList1').append(`<li><a class="dropdown-item" href="/product/productlisting/${item.categoryId}">${item.categoryName}</a></li>`);
+                }
+    },
+
+            error : function (reason){
+                console.log(reason);
+                alert('api failed to load categories');
+            }
+        });
+
+    });
+
+    function addProductToCart(prodId, count, stockQuantity){
+
+        $.ajax({
+            url : "/cart/additems",
+            type : 'POST',
+            contentType : 'application/json',
+            data : JSON.stringify({
+                            ProductId : prodId,
+                            Quantity : count
+                            }),
+            success : function (response){
+                console.log('cart modified successfully');
+                CartBadgeCount();
+                console.log(`${prodId} ${count} ${stockQuantity}`)
+                if(count == stockQuantity){
+                    console.log('hit');
+                    $(`#increment-${prodId}`).prop("disabled", true);
+
+                }
+                else{
+                    $(`#increment-${prodId}`).prop("disabled", false);
+                }
+    },
+
+            error : function (reason){
+                console.log(reason);
+                alert('Failed to modify cart. Check if you signed in');
+            }
+        });
+
+
+    }
+
+    function handleProductQuantity(e,productId, stockQuantity){
+        e.preventDefault();
+        $(`#product-${productId}`).remove();
+
+          $(`#productCard-${productId}`).append(`<div class="counter" id="counter-${productId}">
+      <button id="decrement-${productId}" onclick="handleDecrement(${productId},${stockQuantity})">−</button>
+      <span id="count-${productId}">1</span>
+      <button id="increment-${productId}" onclick="handleIncrement(${productId},${stockQuantity})">+</button>
+    </div>`);
+    let count = parseInt($(`#count-${productId}`).text()) || 0;
+    
+        addProductToCart(productId, count, stockQuantity);
+    }
+
+    function handleIncrement(productId, stockQuantity){
+        let count = parseInt($(`#count-${productId}`).text()) || 0;
+        count++;
+        console.log(count);
+        addProductToCart(productId, count, stockQuantity);
+        $(`#count-${productId}`).text(count);
+    }
+
+    function handleDecrement(productId, stockQuantity){
+        let count = parseInt($(`#count-${productId}`).text()) || 0;
+        count--;
+        console.log(count);
+        addProductToCart(productId, count, stockQuantity);
+        if(count == 0){
+            $(`#counter-${productId}`).remove();
+            $(`#productCard-${productId}`).append(`<a href="#" class="btn btn-warning" id="product-${productId}" onclick="handleProductQuantity(event, ${productId},${stockQuantity})">Add</a>`);
+        }
+        else{
+        $(`#count-${productId}`).text(count);
+
+        }
+    }
+
+   
+</script>

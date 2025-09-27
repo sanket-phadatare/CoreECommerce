@@ -1,0 +1,78 @@
+﻿@model IEnumerable<TaskCoreCategoryProductsListPage.Models.Order>
+
+@{
+    ViewData["Title"] = "My Orders";
+}
+
+<style>
+    .star-rating input {
+        display: none;
+    }
+
+    .star-rating {
+        direction: rtl;
+        display: inline-block;
+        cursor: pointer;
+    }
+
+        .star-rating label {
+            color: #ddd;
+            font-size: 24px;
+            padding: 0 2px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+            .star-rating label:hover,
+            .star-rating label:hover ~ label,
+            .star-rating input:checked ~ label {
+                color: #ffc107;
+            }
+</style>
+
+<div class="container my-4">
+    <h2 class="mb-4">My Orders</h2>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info text-center py-4 shadow-sm">
+            <i class="bi bi-bag-x fs-3 d-block mb-2"></i>
+            You have not placed any orders yet.
+        </div>
+    }
+    else
+    {
+        foreach (var order in Model)
+        {
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-dark text-white d-flex justify-content-between">
+                    <span><i class="bi bi-receipt"></i> Order #@order.OrderId</span>
+                    <small>@order.OrderDate.ToString("dd MMM yyyy")</small>
+                </div>
+                <div class="card-body">
+                    <p><strong>No. of Products:</strong> @order.OrderItems.Count()</p>
+
+                    <div class="row row-cols-1 row-cols-md-3 g-3">
+                        @foreach (var oi in order.OrderItems)
+                        {
+                            <div class="col">
+                                <div class="card border-0 h-100 shadow-sm">
+                                    <div class="card-body">
+                                        <h5 class="card-title">@oi.Product.Name</h5>
+                                        <p class="card-text mb-1"><strong>Quantity:</strong> @oi.Quantity</p>
+                                        <p class="card-text mb-1"><strong>Price:</strong> ₹@oi.Price</p>
+                                        @* <a href="#" class="btn btn-outline-primary btn-sm mt-2">
+                                            <i class="bi bi-star"></i> Add Review
+                                        </a> *@
+                                        @* <partial name="_ReviewStars"/> *@
+                                        @await Component.InvokeAsync("ReviewStars", new{ id = oi.OrderId, productId = oi.ProductId} )
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>

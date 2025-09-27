@@ -1,0 +1,60 @@
+﻿<div class="d-md-flex flex-md-wrap justify-content-center flex-md-equal w-100 my-md-3 ps-md-3" id="category-block">
+
+    @{
+        int count = 9;
+        for(int i =1; i < count; i++)
+        {
+            if(i%2 != 0)
+            {
+                <a asp-controller="Cart" asp-action="ProductListing" class="text-decoration-none">
+                    <div class="bg-dark text-white p-4 rounded me-md-3 mt-1 pt-3 px-3 pt-md-5 px-md-5 text-center overflow-hidden">
+                        <div class="my-3 py-3">
+                            <h2 class="display-5">Another headline</h2>
+                            <p class="lead">And an even wittier subheading.</p>
+                        </div>
+                        <div class="bg-body-tertiary shadow-sm mx-auto"
+                             style="width: 80%; height: 300px; border-radius: 21px 21px 0 0;"></div>
+                    </div>
+                </a>
+                
+            }
+            else
+            {
+                <div class="bg-body-tertiary me-md-3 pt-3 px-3 mt-1 pt-md-5 px-md-5 text-center overflow-hidden">
+                    <div class="my-3 p-3">
+                        <h2 class="display-5">Another headline</h2>
+                        <p class="lead">And an even wittier subheading.</p>
+                    </div>
+                    <div class="bg-dark shadow-sm mx-auto" style="width: 80%; height: 300px; border-radius: 21px 21px 0 0;">
+                    </div>
+                </div>
+            }
+        }
+    }
+   
+</div>
+
+
+<script>
+    $(function(){
+        $.ajax({
+            url : "/category/getall",
+            type : 'GET',
+            content : 'application/json',
+
+            success : function (response){
+                console.log(response);
+                var count = 1;
+                for(var item of response){
+                    $('#categoryList').append(`<li><a class="dropdown-item" href="/product/productlisting/${item.categoryId}">${item.categoryName}</a></li>`);
+                }
+    },
+
+            error : function (reason){
+                console.log(reason);
+                alert('api failed to categories');
+            }
+        });
+
+    });
+</script>

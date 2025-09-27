@@ -1,0 +1,95 @@
+﻿@model IEnumerable<dynamic>
+
+@{
+    ViewData["Title"] = "Your Cart";
+    decimal grandTotal = Model.Sum(i => i.Price * i.Quantity);
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4">🛒 Your Cart</h2>
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            Your cart is empty. <a asp-controller="Home" asp-action="Index">Continue shopping</a>.
+        </div>
+    }
+    else
+    {
+        <table class="table table-bordered table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>Product</th>
+                    <th style="width:120px;">Quantity</th>
+                    <th>Price</th>
+                    <th>Total</th>
+                    <th style="width:150px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.ProductName</td>
+                        <td>
+                            <form asp-controller="Cart" asp-action="UpdateQuantity" method="post" class="d-flex">
+                                <input type="hidden" name="productId" value="@item.ProductId" />
+                                <input type="number" style="width : 4rem" name="quantity" value="@item.Quantity" min="1" max="@item.StockQuantity" class="form-control form-control-sm me-2 quantity-input" />
+                                <button type="submit" class="btn btn-sm btn-primary">Update</button>
+                            </form>
+                        </td>
+                        <td>Rs. @item.Price.ToString()</td>
+                        <td>Rs. @(item.Price* item.Quantity)</td>
+                        <td>
+                            <a asp-controller="Cart" asp-action="RemoveFromCart" asp-route-productId="@item.ProductId" class="btn btn-sm btn-danger">
+                                Remove
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="3" class="text-end fw-bold">Grand Total:</td>
+                    <td colspan="2" class="fw-bold">Rs. @grandTotal.ToString()</td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <div class="d-flex justify-content-between mt-3">
+            <a asp-controller="Home" asp-action="Index" class="btn btn-secondary">Continue Shopping</a>
+            <div>
+                <a asp-controller="Cart" asp-action="ClearCart" class="btn btn-warning me-2">Clear Cart</a>
+                <a asp-controller="Cart" asp-action="BuyNow" class="btn btn-success">Buy Now</a>
+            </div>
+        </div>
+    }
+</div>
+<script>
+        $(document).on("blur", ".quantity-input", function () {
+        let min = parseInt($(this).attr("min"));
+        let max = parseInt($(this).attr("max"));
+        let val = parseInt($(this).val());
+
+        // If not a number, reset to min
+        if (isNaN(val)) {
+            $(this).val(min);
+            return;
+        }
+
+        // Enforce min/max
+        if (val < min) {
+            $(this).val(min);
+        } else if (val > max) {
+            $(this).val(max);
+        }
+    });
+</script>

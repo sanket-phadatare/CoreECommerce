@@ -1,0 +1,128 @@
+﻿@model TaskCoreCategoryProductsListPage.Models.Review
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+
+<div class="rating-container">
+    <div class="star-rating star-rating-@ViewBag.OrderId-@ViewBag.ProductId animated-stars">
+        <input type="radio" id="star5-@ViewBag.OrderId-@ViewBag.ProductId" name="rating-@ViewBag.OrderId-@ViewBag.ProductId" value="5"
+               @(Model != null && Model.Rating == 5 ? "checked" : "") />
+        <label for="star5-@ViewBag.OrderId-@ViewBag.ProductId" class="bi bi-star-fill"></label>
+
+        <input type="radio" id="star4-@ViewBag.OrderId-@ViewBag.ProductId" name="rating-@ViewBag.OrderId-@ViewBag.ProductId" value="4"
+               @(Model != null && Model.Rating == 4 ? "checked" : "") />
+        <label for="star4-@ViewBag.OrderId-@ViewBag.ProductId" class="bi bi-star-fill"></label>
+
+        <input type="radio" id="star3-@ViewBag.OrderId-@ViewBag.ProductId" name="rating-@ViewBag.OrderId-@ViewBag.ProductId" value="3"
+               @(Model != null && Model.Rating == 3 ? "checked" : "") />
+        <label for="star3-@ViewBag.OrderId-@ViewBag.ProductId" class="bi bi-star-fill"></label>
+
+        <input type="radio" id="star2-@ViewBag.OrderId-@ViewBag.ProductId" name="rating-@ViewBag.OrderId-@ViewBag.ProductId" value="2"
+               @(Model != null && Model.Rating == 2 ? "checked" : "") />
+        <label for="star2-@ViewBag.OrderId-@ViewBag.ProductId" class="bi bi-star-fill"></label>
+
+        <input type="radio" id="star1-@ViewBag.OrderId-@ViewBag.ProductId" name="rating-@ViewBag.OrderId-@ViewBag.ProductId" value="1"
+               @(Model != null && Model.Rating == 1 ? "checked" : "") />
+        <label for="star1-@ViewBag.OrderId-@ViewBag.ProductId" class="bi bi-star-fill"></label>
+    </div>
+    @if (Model == null)
+    {
+        <p class="text-muted mt-1">Click to rate</p>
+
+    }
+    else
+    {
+        <textarea id="userReview-@ViewBag.OrderId-@ViewBag.ProductId" class="form-control mt-2 w-75" rows="3">@Model.Comment</textarea>
+        <button id="reviewSubmit-@ViewBag.OrderId-@ViewBag.ProductId" class="btn btn-outline-dark mt-2"
+                onclick="handleReviewSubmit(@Model.Rating, @ViewBag.OrderId, @ViewBag.ProductId)">
+            Submit
+        </button>
+        <a id="delete-@ViewBag.OrderId-@ViewBag.ProductId" class="btn btn-outline-danger mt-2" asp-controller="Review" asp-action="Delete" asp-route-orderId="@Model.OrderId" asp-route-productId="@Model.ProductId">Delete Review</a>
+
+    }
+</div>
+
+@* <button class="btn btn-outline-dark">Submit</button> *@
+@* <input  type="text" rows="3"/> *@
+
+<script>
+    $('.star-rating-@ViewBag.OrderId-@ViewBag.ProductId:not(.readonly) input').on('change', function () {
+        const label = $(this).next('label');
+        label.css('transform', 'scale(1.2)');
+        setTimeout(() => {
+            label.css('transform', 'scale(1)');
+        }, 200);
+        let idParts = this.id.split('-');
+        let orderId = idParts[1];
+        let productId = idParts[2];
+        let rating = $(this).val()
+        console.log(rating);
+        console.log(orderId);
+        console.log(productId);
+        // inside your rating change handler
+    var $container = $(this).closest('.rating-container');
+
+
+    // remove the hint <p>
+    $container.find('p').remove();
+
+    //remove delete button
+    var deleteButton = $(`#delete-${orderId}-${productId}`);
+                if(deleteButton != null){
+                    deleteButton.remove();
+                }
+
+    // add input box only if it doesn't exist already
+    if ($container.find('textarea').length === 0) {
+        $container.append(`<textarea id="userReview-${orderId}-${productId}" class="form-control mt-2 w-75" rows="3" placeholder="Write a review" ></textarea>`);
+            $container.append(`<button id="reviewSubmit-${orderId}-${productId}" class="btn btn-outline-dark mt-2" onclick="handleReviewSubmit(${rating}, ${orderId}, ${productId})">Submit</button>`);
+    }
+    else{
+        $(`#reviewSubmit-${orderId}-${productId}`).remove();
+        $container.append(`<button id="reviewSubmit-${orderId}-${productId}" class="btn btn-outline-dark mt-2" onclick="handleReviewSubmit(${rating}, ${orderId}, ${productId})">Submit</button>`);
+    }
+
+    });
+
+    function handleReviewSubmit(rat, ordId, prodId){
+        let comm = $(`#userReview-${ordId}-${prodId}`).val();
+
+        $.ajax({
+            url : "/review/create",
+            type : 'POST',
+            contentType : 'application/json',
+            data : JSON.stringify({
+                            ProductId : prodId,
+                            OrderId : ordId,
+                            Rating : rat,
+                            Comment : comm
+                            }),
+            success : function (response){
+                console.log(response.statusCode);
+                console.log('Product Review added successfully');
+                var $container = $(`.star-rating-${ordId}-${prodId}`).closest('.rating-container');
+                var deleteButton = $(`#delete-${ordId}-${prodId}`);
+                if(deleteButton != null){
+                    deleteButton.remove();
+                }
+                $container.append(`<a id="delete-${ordId}-${prodId}" class="btn btn-outline-danger mt-2 ms-1" href="review/delete?orderId=${ordId}&productId=${prodId}" Review/Delete?orderId=5&productId=2>Delete Review</a>`);
+                    // Set toast body dynamically if needed
+    $('#reviewToastBody').text('Review submitted successfully for product ' + prodId);
+
+    // Show toast
+    var toastEl = document.getElementById('reviewToast');
+    var toast = new bootstrap.Toast(toastEl);
+    toast.show();
+
+    },
+
+            error : function (reason){
+                console.log(reason.responseText);
+                alert('Failed to add review');
+            }
+        });
+
+    }
+
+
+</script>
